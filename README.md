@@ -51,7 +51,7 @@ I am a pediatric speech-language pathologist currently expanding my technical sk
 
 ## Technologies Used
 
-*SQL* (PostgreSQL, MySQL, or SQL Server, depending on the project)
+*SQL* (PostgreSQL, DB Fiddle, depending on the project)
 
 *Tableau* (for data visualization and dashboard creation)
 
