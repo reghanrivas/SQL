@@ -1,0 +1,78 @@
+-- In this project, I conducted a multi-table analysis of customer and order data using SQL in SQLiteStudio. The dataset included monthly sales data from January, February, March, and May, each stored in separate tables, along with a customer information table.
+
+-- A significant component of the project involved data cleaning and validation to ensure reliable analysis. This included identifying and filtering out incomplete, malformed, or placeholder entries—such as rows with non-numeric order IDs or invalid values (e.g., "Order ID" or character overflow like "..."). To ensure only valid data was analyzed, I implemented filters such as:
+
+-- WHERE length(order_id) = 6  
+-- AND order_id <> 'Order ID'
+
+-- This project highlights my ability to work with raw, inconsistent data, apply robust filtering logic, and derive meaningful insights across relational datasets. It also reflects strong attention to detail and proficiency in structuring queries for large-scale data analysis.
+
+-- ANALYSIS START
+
+-- Question #1
+-- How many unique orders were placed in January? In other words, how many distinct order ids do we have?
+
+SELECT COUNT (DISTINCT orderID)
+FROM BIT_DB.JanSales
+WHERE length(JanSales.orderID) = 6
+AND orderID <> 'Order ID'
+￼
+
+-- Question #2
+-- How many of those orders were for an iPhone?
+
+SELECT COUNT (DISTINCT orderID)
+FROM BIT_DB.JanSales
+WHERE length(JanSales.orderID) = 6
+AND orderID <> 'Order ID'
+AND Product = 'iPhone'
+;
+
+-- Question #3
+-- Select the customer account numbers for all the orders that were placed in February.
+
+SELECT DISTINCT customers.acctnum
+FROM customers
+INNER JOIN FebSales
+ON customers.order_id = FebSales.orderID
+WHERE length(orderid) = 6
+AND orderid <> 'Order ID'
+
+-- Question #4
+-- Which product was the cheapest one sold in January, and what was the price?
+
+SELECT distinct Product, price
+FROM BIT_DB.JanSales
+WHERE  price in (SELECT min(price) FROM BIT_DB.JanSales)
+
+-- Question #5
+-- What is the total revenue for each product sold in January? (Revenue can be calculated using the number of products sold and the price of the products).
+
+SELECT SUM(Quantity)*price AS revenue
+, Product
+FROM BIT_DB.JanSales
+GROUP BY Product
+;
+
+-- Question #6
+-- Which products were sold in February at 548 Lincoln St, Seattle, WA 98101, how many of each were sold, and what was the total revenue?
+
+SELECT Product, SUM (Quantity), SUM (Quantity)*price as revenue
+FROM FebSales
+WHERE location LIKE "%548 lincoln%"
+GROUP BY Product
+;
+
+-- Question #7
+-- How many customers ordered more than 2 products at a time in February, and what was the average amount spent for those customers?
+
+SELECT COUNT (DISTINCT cust.acctnum)
+, AVG (Quantity * price)
+FROM FebSales AS Feb
+LEFT JOIN customers AS cust
+ON Feb.orderID = cust.order_id
+WHERE Feb.Quantity >2
+AND length(orderID) = 6
+AND orderID <> 'Order ID'
+;
+
