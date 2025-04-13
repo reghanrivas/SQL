@@ -1,16 +1,15 @@
--- This analysis utilized a dataset of Spotify tracks to explore musical trends, artist features, and audio characteristics.
--- The analysis features the use of LEFT JOIN, INNER JOIN, SELF JOIN, multiple JOINs in one query, and query with a subquery.
+-- This analysis utilized a dataset of Spotify tracks to explore musical trends, artist features, and audio characteristics. 
+-- For this project, I downloaded a Spotify dataset from Kaggle and used SQL to explore and extract insights from the data.
 
 -- In this project, my job has been to analyze track-level data including metrics like popularity, danceability, energy, etc.
--- Here's some background on the data:
 
+-- Here's some background on the data:
 -- (1) Each track is associated with an artist and includes audio features such as tempo, key, and valence
 -- (2) Popularity scores are used to examine audience reception
 -- (3) We’ll simulate additional tables to demonstrate joins, such as artist genre and playlists
 
--- TABLE STRUCTURE
-
-CREATE TABLE spotifydata (
+-- I began by creating a SQL table to match the dataset structure:
+CREATE TABLE BIT_DB.Spotifydata (
     id INTEGER PRIMARY KEY,
     artist_name VARCHAR NOT NULL,
     track_name VARCHAR NOT NULL,
@@ -18,18 +17,24 @@ CREATE TABLE spotifydata (
     popularity INTEGER NOT NULL,
     danceability DECIMAL(4,3) NOT NULL,
     energy DECIMAL(4,3) NOT NULL,
-    song_key INTEGER NOT NULL,
+    key INTEGER NOT NULL,
     loudness DECIMAL(5,3) NOT NULL,
-    song_mode INTEGER NOT NULL,
+    mode INTEGER NOT NULL,
     speechiness DECIMAL(5,4) NOT NULL,
     acousticness DECIMAL(6,5) NOT NULL,
-    instrumentalness DECIMAL(8,7) NOT NULL,
+    instrumentalness TEXT NOT NULL,
     liveness DECIMAL(5,4) NOT NULL,
     valence DECIMAL(4,3) NOT NULL,
     tempo DECIMAL(6,3) NOT NULL,
     duration_ms INTEGER NOT NULL,
     time_signature INTEGER NOT NULL
 );
+
+-- I inserted the Spotify .csv data into the table using import functionality.
+
+-- The analysis features the use of LEFT JOIN, INNER JOIN, SELF JOIN, multiple JOINs in one query, and query with a subquery.
+
+-- I performed exploratory analysis using SQL to answer questions about musical attributes, artist trends, and track popularity.
 
 -- ANALYSIS START 
 
