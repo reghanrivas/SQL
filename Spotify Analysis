@@ -1,0 +1,143 @@
+-- This analysis utilized a dataset of Spotify tracks to explore musical trends, artist features, and audio characteristics.
+-- The analysis features the use of LEFT JOIN, INNER JOIN, SELF JOIN, multiple JOINs in one query, and query with a subquery.
+
+-- In this project, my job has been to analyze track-level data including metrics like popularity, danceability, energy, etc.
+-- Here's some background on the data:
+
+-- (1) Each track is associated with an artist and includes audio features such as tempo, key, and valence
+-- (2) Popularity scores are used to examine audience reception
+-- (3) We’ll simulate additional tables to demonstrate joins, such as artist genre and playlists
+
+-- TABLE STRUCTURE
+
+CREATE TABLE spotifydata (
+    id INTEGER PRIMARY KEY,
+    artist_name VARCHAR NOT NULL,
+    track_name VARCHAR NOT NULL,
+    track_id VARCHAR NOT NULL,
+    popularity INTEGER NOT NULL,
+    danceability DECIMAL(4,3) NOT NULL,
+    energy DECIMAL(4,3) NOT NULL,
+    song_key INTEGER NOT NULL,
+    loudness DECIMAL(5,3) NOT NULL,
+    song_mode INTEGER NOT NULL,
+    speechiness DECIMAL(5,4) NOT NULL,
+    acousticness DECIMAL(6,5) NOT NULL,
+    instrumentalness DECIMAL(8,7) NOT NULL,
+    liveness DECIMAL(5,4) NOT NULL,
+    valence DECIMAL(4,3) NOT NULL,
+    tempo DECIMAL(6,3) NOT NULL,
+    duration_ms INTEGER NOT NULL,
+    time_signature INTEGER NOT NULL
+);
+
+-- ANALYSIS START 
+
+-- Question #1: Which artists have the highest average track popularity across all their songs in the dataset?
+-- WHY? Useful for identifying consistently top-performing artists.
+
+SELECT artist_name, ROUND(AVG(popularity)) AS avg_popularity
+FROM Spotifydata
+GROUP BY artist_name
+ORDER BY AVG(popularity) desc
+LIMIT 20
+;
+
+-- Question #2: What are the top 10 most popular songs, and what are their key audio features (e.g., danceability, energy, valence)? 
+-- WHY? Helps understand the “sound” of hit tracks.
+
+
+SELECT track_name, popularity, danceability, energy, valence, song_key, loudness, song_mode, speechiness, acousticness, instrumentalness, liveness
+FROM Spotifydata
+ORDER BY popularity desc
+LIMIT 10
+;
+
+
+-- Question #3: Which track has the highest energy and how popular is it? 
+-- WHY? Could inform playlist placement or fitness brand collaborations.
+
+SELECT track_name, artist_name, popularity, energy
+FROM Spotifydata
+WHERE energy = (SELECT MAX(energy) FROM Spotifydata) ;
+
+-- Question #4: How does tempo correlate with popularity? 
+-- WHY? Can be used to explore whether faster/slower songs tend to perform better.
+
+SELECT 
+  ROUND ((tempo / 10))* 10 AS tempo_range, 
+  ROUND(AVG(popularity), 1) AS avg_popularity
+FROM Spotifydata
+GROUP BY tempo_range
+ORDER BY tempo_range
+;
+
+-- Question #5: Which songs are the most danceable but have a below-average popularity score? 
+-- WHY? Uncover hidden gems with potential for promotion.
+
+SELECT track_name, artist_name, danceability, popularity
+FROM Spotifydata
+WHERE popularity < (SELECT AVG(popularity) FROM Spotifydata)
+    AND danceability > 0.7
+ORDER BY danceability desc
+;
+
+-- Question #6: What is the distribution of song duration across tracks? Are shorter songs more popular on average? 
+-- WHY? Supports marketing decisions about song length in the streaming era.
+
+SELECT 
+  ROUND(duration_ms / 30000.0) * 30 AS duration_group_seconds,
+  COUNT(*) AS num_tracks,
+  ROUND(AVG(popularity), 1) AS avg_popularity
+FROM Spotifydata
+GROUP BY duration_group_seconds
+ORDER BY duration_group_seconds;
+
+
+-- Question #7: Which artists have the most tracks in the dataset, and how do their average loudness or valence scores compare? 
+-- WHY? Useful for genre-based analysis or artist branding insights.
+
+SELECT 
+  artist_name, 
+  COUNT(*) AS artist_tracks,
+  ROUND(AVG(loudness), 2) AS avg_loudness,
+  ROUND(AVG(valence), 2) AS avg_valence
+FROM Spotifydata
+GROUP BY artist_name
+HAVING artist_tracks >= 3
+ORDER BY artist_tracks DESC
+;
+
+
+-- Question #8: What’s the average popularity score by key (song_key), and which key is most common among popular tracks? 
+-- WHY? Musical key trends might influence production and remix choices.
+
+SELECT 
+  song_key,
+  COUNT(*) AS key_count,
+  ROUND(AVG(popularity), 2) AS avg_popularity
+FROM Spotifydata
+GROUP BY song_key
+ORDER BY avg_popularity
+;
+
+-- Question #9: Do tracks in major mode (song_mode = 1) tend to have higher popularity than those in minor mode (song_mode = 0)? 
+-- WHY? Analyzes how musical mood impacts listener reception.
+
+SELECT 
+  song_mode, 
+  COUNT(*) AS mode_count,
+  ROUND(AVG(popularity), 2) AS avg_pop_mode
+FROM Spotifydata
+GROUP BY song_mode
+;
+
+-- Question #10: Which songs have a high speechiness score and are also highly popular? 
+-- WHY? Could indicate the success of spoken-word style or rap tracks.
+
+SELECT track_name, artist_name, speechiness, popularity
+FROM Spotifydata
+WHERE speechiness > 0.1
+AND popularity > (SELECT AVG(popularity) FROM Spotifydata)
+ORDER BY speechiness DESC
+;
