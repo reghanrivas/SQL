@@ -1,0 +1,211 @@
+-- This analysis utilized the Chinook dataset, a digital media store database, to explore sales trends, customer behavior, and employee performance. The dataset includes tables for artists, albums, tracks, invoices, customers, and employees, allowing for comprehensive data analysis using SQL.
+
+-- The analysis features the use of JOINs (INNER JOIN, LEFT JOIN), aggregate functions, and subqueries to extract insights from the data.
+
+-- The objective of this project was to identify key business insights such as top-performing sales agents, high-revenue genres, and customer spending patterns.
+
+-- Here's some background on the data:
+
+-- (1) The dataset includes information on over 300 tracks, categorized by artist, genre, and media type.
+-- (2) Invoices include detailed data on sales transactions, allowing for analysis of revenue by time period, sales agent, and customer.
+-- (3) The employee table includes sales agents, enabling performance analysis based on total sales and customer interactions.
+-- (4) Genre data allows for identifying popular music types and their associated revenue, providing insights into customer preferences and purchasing behavior.
+
+-- The findings of this project provide actionable insights into sales performance and customer engagement, with recommendations to drive profitability and improve sales strategies.
+
+-- Question #1: Show Customers (their full names, customer ID, and country) who are not in the US.
+
+SELECT FirstName, LastName, CustomerId, Country
+FROM chinook.customers
+WHERE Country <> 'USA'
+;
+
+-- Question #2: Show only the Customers from Brazil.
+
+SELECT FirstName, LastName, CustomerId, Country
+FROM chinook.customers
+WHERE Country IS 'Brazil'
+;
+
+-- Question #3: Find the Invoices of customers who are from Brazil. The resulting table should show the customer's full name, Invoice ID, Date of the invoice, and billing country.
+
+SELECT c.LastName, c.FirstName, i.InvoiceId, i.InvoiceDate, i.BillingCountry
+FROM chinook.invoices AS i
+INNER JOIN chinook.customers AS c
+ON c.CustomerID = i.CustomerId
+WHERE c.Country = 'Brazil'
+ORDER BY c.LastName
+;
+
+-- Question #4: Show the Employees who are Sales Agents.
+
+SELECT LastName, FirstName, Title
+FROM chinook.employees
+WHERE Title LIKE '%Agent%'
+;
+
+-- Question #5: Find a unique/distinct list of billing countries from the Invoice table.
+
+SELECT DISTINCT invoices.BillingCountry
+FROM chinook.invoices
+ORDER BY chinook.invoices.BillingCountry
+;
+
+-- Question #6: Provide a query that shows the invoices associated with each sales agent. The resulting table should include the Sales Agent's full name.
+
+SELECT i.InvoiceId, e.LastName AS AgentLastName, e.FirstName AS AgentFirstName
+FROM chinook.customers c
+JOIN chinook.invoices i
+ON i.CustomerId = c.CustomerId
+JOIN chinook.employees e
+ON e.Employeeid = c.SupportRepid
+;
+
+
+-- Question #7: Show the Invoice Total, Customer name, Country, and Sales Agent name for all invoices and customers.
+
+SELECT 
+	i.InvoiceId
+	, i.Total
+	, c.LastName AS CustLastName 
+	, c.FirstName AS CustFirstName
+ 	, c.Country, e.LastName AS AgentLastName
+	, e.FirstName AS AgentFirstName
+FROM chinook.customers c
+JOIN chinook.invoices i
+ON i.CustomerId = c.CustomerId
+JOIN chinook.employees e
+ON e.Employeeid = c.SupportRepid
+ORDER BY AgentLastName
+;
+
+
+-- Question #8: How many Invoices were there in 2009?
+
+SELECT COUNT (InvoiceId)
+FROM invoices
+WHERE InvoiceDate LIKE '%2009%'
+;
+
+-- Question #9: What are the total sales for 2009?
+
+SELECT SUM (Total)
+FROM invoices
+WHERE InvoiceDate LIKE '%2009%'
+;
+
+-- Question #10: Write a query that includes the purchased track name with each invoice line ID.
+
+SELECT t.Name, ii.InvoiceId
+FROM invoice_items ii
+JOIN tracks t
+ON ii.TrackId = t.TrackId 
+;
+
+-- Question #11: Write a query that includes the purchased track name AND artist name with each invoice line ID.
+
+SELECT 
+    art.Name as Artist
+    , t.Name as Title
+    , ii.InvoiceId
+FROM invoice_items ii
+JOIN tracks t
+    ON ii.TrackId = t.TrackId 
+JOIN albums alb
+    ON t.AlbumId = alb.AlbumId
+JOIN artists art
+    ON alb.ArtistId = art.ArtistId
+ORDER BY Artist, Title
+;
+
+-- Question #12: Provide a query that shows all the Tracks, and include the Album name, Media type, and Genre.
+
+SELECT 
+    art.Name AS Artist
+    , alb.Title AS Album
+    , t.Name AS Track
+    , g.Name AS Genre
+    , m.Name AS MediaType
+FROM tracks t
+JOIN albums alb
+    ON t.AlbumId = alb.AlbumId
+JOIN artists art
+    ON alb.ArtistId = art.ArtistId
+JOIN media_types m
+    ON t.MediaTypeId = m.MediaTypeId
+JOIN genres g
+    ON t.GenreId = g.GenreId
+ORDER BY Artist, Album, Track
+;
+
+-- Question #13: Show the total sales made by each sales agent.
+
+SELECT 
+    e.LastName
+    , e.FirstName
+    , SUM (i.Total) AS SalesTotalAmt
+    , COUNT (DISTINCT i.InvoiceId) AS SalesTotalCount
+FROM invoices i
+JOIN customers c
+    ON i.CustomerId = c.CustomerId
+JOIN employees e
+    ON c.SupportRepId = e.EmployeeId
+GROUP BY e.LastName
+;
+
+-- Question #14: Which sales agent made the most dollars in sales in 2009?
+
+SELECT 
+    e.LastName
+    , e.FirstName
+    , SUM (i.Total) AS SalesTotalAmt
+    , COUNT (DISTINCT i.InvoiceId) AS SalesTotalCount
+FROM invoices i
+JOIN customers c
+    ON i.CustomerId = c.CustomerId
+JOIN employees e
+    ON c.SupportRepId = e.EmployeeId
+GROUP BY e.LastName
+ORDER BY SalesTotalAmt desc
+LIMIT 1
+;
+
+-- Query #15: Identify the top 5 most popular genres based on total sales revenue.
+
+SELECT g.Name AS Genre, SUM(ii.UnitPrice * ii.Quantity) AS Revenue
+FROM invoices i
+JOIN invoice_items ii
+    ON i.InvoiceId = ii.InvoiceId
+JOIN tracks t
+    ON ii.TrackId = t.TrackId
+JOIN genres g
+ON t.GenreId = g.GenreId
+GROUP BY Genre
+ORDER BY Revenue DESC
+LIMIT 5
+;
+
+-- Query #16: Determine the top 3 customers with the highest total purchase value.
+SELECT c.LastName, c.FirstName, SUM (i.Total) AS TotalSpent
+FROM customers c
+JOIN invoices i
+ON c.CustomerId = i.CustomerId
+GROUP BY c.LastName
+ORDER BY TotalSpent DESC
+LIMIT 3
+;
+
+-- Query #17: Find the 5 albums that generated the most revenue.
+
+SELECT alb.Title AS Album, SUM(ii.UnitPrice * ii.Quantity) AS Revenue
+FROM invoices i
+JOIN invoice_items ii
+    ON i.InvoiceId = ii.InvoiceId
+JOIN tracks t
+    ON ii.TrackId = t.TrackId
+JOIN albums alb
+ON t.AlbumId = alb.AlbumId
+GROUP BY Album
+ORDER BY Revenue DESC
+LIMIT 5
+;
